@@ -1,0 +1,25 @@
+name: Dumpyara-Actions
+
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: 'URLs'
+        required: true
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Write GitHub token to file
+        run: echo "${{ secrets.GIT_TOKEN }}" > .githubtoken
+
+      - name: Set up environment
+        run: bash setup.sh
+
+      - name: Run dumpyara
+        run: bash dumpyara.sh '${{ inputs.urls }}'
