@@ -101,14 +101,20 @@ if echo "${1}" | grep -e '^\(https\?\|ftp\)://.*$' > /dev/null; then
 
     LOGI "Finished downloading file. ($(date +%R:%S))"
 
-    # Check for 'Content-Disposition'
-    if [[ ! -f "$(echo "${URL##*/}" | inline-detox)" ]]; then
-        URL=$(wget --server-response --spider "${URL}" 2>&1 | awk -F"filename=" '{print $2}')
-    fi
+    # Robust filename extraction and sanitization
+    FILENAME=$(basename "${URL%%\?*}")
+    FILENAME=$(echo "$FILENAME" | tr -d '\n\r' | xargs)
+    detox "$FILENAME"
+    INPUT=$(echo "$FILENAME" | inline-detox)
 
-    # Sanitize final file
-    detox "${URL##*/}"
-    INPUT=$(echo "${URL##*/}" | inline-detox)
+    # Fallback: if file not found, try to extract from 'Content-Disposition' header
+    if [[ ! -f "$INPUT" ]]; then
+        ALTNAME=$(wget --server-response --spider "${URL}" 2>&1 | awk -F'filename=' '/Content-Disposition/ {print $2}' | tr -d '\n\r' | xargs)
+        if [[ -n "$ALTNAME" && -f "$ALTNAME" ]]; then
+            detox "$ALTNAME"
+            INPUT=$(echo "$ALTNAME" | inline-detox)
+        fi
+    fi
 else
     # Otherwise, check if it's a file or directory
     if [[ -e ${1} ]]; then
