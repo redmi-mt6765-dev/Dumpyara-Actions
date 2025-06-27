@@ -24,7 +24,7 @@ jobs:
       - name: Write GitHub token to file
         run: |
           echo "${{ secrets.GIT_TOKEN }}" > .github_token
-          echo "${{ secrets.ORG_NAME }}" >> .github_orgname
+          echo "${{ secrets.ORG_NAME }}" > .github_orgname
 
       - name: Config Git
         run: git config --global user.email "${{ inputs.GIT_EMAIL }}" && git config --global user.name "${{ inputs.GIT_NAME }}"
