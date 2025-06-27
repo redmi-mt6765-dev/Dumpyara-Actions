@@ -1,0 +1,42 @@
+name: DumprX-Actions
+
+on:
+  workflow_dispatch:
+    inputs:
+      URL:
+        description: 'Firmware download URL'
+        required: true
+      GIT_NAME:
+        description: 'Your Name'
+        required: true
+      GIT_EMAIL:
+        description: 'you@example.com'
+        required: true
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Write GitHub token to file
+        run: |
+          echo "${{ secrets.GIT_TOKEN }}" > .github_token
+          echo "${{ secrets.ORG_NAME }}" >> .github_orgname
+
+      - name: Config Git
+        run: git config --global user.email "${{ inputs.GIT_EMAIL }}" && git config --global user.name "${{ inputs.GIT_NAME }}"
+
+      - name: Clone DumprX
+        run: git clone https://github.com/DumprX/DumprX.git
+
+      - name: Copy files
+        run: cp .github_token .github_orgname $HOME/work/Dumpyara-Actions/Dumpyara-Actions/DumprX
+
+      - name: Set up environment
+        run: cd DumprX && bash setup.sh
+
+      - name: Run DumprX
+        run: cd DumprX && bash dumper.sh '${{ inputs.URL }}'
